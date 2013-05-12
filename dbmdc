@@ -18,7 +18,7 @@ my $db = DBM::Deep->new($file);
 
 print STDERR "Your database is called \$db\n";
 print STDERR "Interact with it using normal Perl.\n";
-print STDERR "The result of each line is dumped to stdout.\n";
+print STDERR "The result of each line is dumped to stdout after some rudimentary filtering.\n";
 print STDERR "\n";
 
 while (1) {
@@ -28,6 +28,18 @@ while (1) {
     chomp $line;
 
     my $result = eval "$line";
-    print STDERR $@ if $@;
-    print dump($result), "\n" if !$@;
+    if ($@) {
+        print STDERR $@;
+    } else {
+        my $dump = dump($result);
+
+        # strip comments
+        $dump =~ s/\n\s*#.*\n/\n/g;
+
+        # strip blessings
+        $dump =~ s/bless\(//g;
+        $dump =~ s/, "[\w:]*"\)//g;
+
+        print "$dump\n";
+    }
 }
